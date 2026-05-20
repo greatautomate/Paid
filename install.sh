@@ -53,21 +53,23 @@ curl -sLf -o "$BOT_DIR/bot.pyc" "$BOT_PYC_URL"
 [ -s "$BOT_DIR/bot.pyc" ] || { err "bot.pyc download failed"; exit 1; }
 ok "bot.pyc downloaded ($(stat -c%s "$BOT_DIR/bot.pyc") bytes)"
 
-step "Configuring admins"
-if [ ! -s "$BOT_DIR/admins.txt" ]; then
-    read -p "Enter your Telegram User ID (admin): " ADMIN_ID
-    echo "$ADMIN_ID" > "$BOT_DIR/admins.txt"
-    ok "admin saved"
-else
-    log "admins.txt already exists, keeping it"
+step "Bot configuration"
+read -p "Enter Telegram Bot Token (from @BotFather): " BOT_TOKEN
+if [ -z "$BOT_TOKEN" ]; then
+    err "Bot token cannot be empty."
+    exit 1
 fi
 
-step "Writing bot token config (if missing)"
-if [ ! -s "$BOT_DIR/.env" ] && [ ! -s "$BOT_DIR/token.txt" ]; then
-    read -p "Enter Telegram Bot Token (from @BotFather): " BOT_TOKEN
-    echo "$BOT_TOKEN" > "$BOT_DIR/token.txt"
-    chmod 600 "$BOT_DIR/token.txt"
+read -p "Enter Admin Telegram ID: " ADMIN_ID
+if [ -z "$ADMIN_ID" ]; then
+    err "Admin Telegram ID cannot be empty."
+    exit 1
 fi
+
+echo "$BOT_TOKEN" > "$BOT_DIR/token.txt"
+chmod 600 "$BOT_DIR/token.txt"
+echo "$ADMIN_ID" > "$BOT_DIR/admins.txt"
+ok "bot token and admin saved"
 
 step "Installing systemd service"
 cat > /etc/systemd/system/${SERVICE_NAME}.service <<EOF
